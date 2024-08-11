@@ -1,5 +1,6 @@
 import {Model} from 'objection';
 import Monitor from './Monitor.js';
+import bcrypt from "bcrypt";
 
 class User extends Model {
   static get tableName() {
@@ -46,6 +47,10 @@ class User extends Model {
         }
       }
     };
+  }
+
+  async $beforeInsert() {
+    this.password = await bcrypt.hash(this.password, 12);
   }
 }
 

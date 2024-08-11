@@ -2,21 +2,37 @@ import express from 'express';
 import knex from 'knex';
 import {Model} from 'objection';
 import knexConfig from './knexfile.js';
+import paths from './routes/paths.js';
 import config from './config.js';
-import {engine} from "express-handlebars";
+import {engine} from 'express-handlebars';
+
+import authRoutes from './routes/auth.js';
+import authGuard from "./middleware/authGuard.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
-app.engine('handlebars', engine());
+app.use(cookieParser());
+
+app.engine('handlebars', engine({
+  defaultLayout: 'main',
+  layoutsDir: './views/layouts'
+}));
 app.set('view engine', 'handlebars');
 app.set('views', './views');
+
+app.use(express.urlencoded({extended: true}));
+
+app.use(express.static('./views/public'));
 
 const db = knex(knexConfig.development);
 Model.knex(db);
 
-app.get('/', (req, res) => {
+app.get(paths.app.index, authGuard, (req, res) => {
   res.render('home', {title: 'Home', message: 'Welcome to Handlebars!'});
 });
+
+app.use(authRoutes);
 
 app.listen(config.APP_PORT, () => {
   console.log(`App is ready on port ${config.APP_PORT}.`);
