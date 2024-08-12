@@ -5,6 +5,13 @@ dotenv.config();
 // todo: add config validation
 
 export default {
+  ERRORS: {
+    401: 'Unauthorized error occurred. You need to sign in to access this page.',
+    403: 'Forbidden error occurred. You do not have permission to view this page.',
+    404: 'Page Not Found error occurred.',
+    500: 'Internal Server Error occurred. Please try again later or contact server administrator.'
+  },
+
   APP_PORT: process.env.APP_PORT ? parseInt(process.env.APP_PORT) : 3030,
 
   DATABASE_HOST: process.env.DATABASE_HOST || 'localhost',

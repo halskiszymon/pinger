@@ -5,8 +5,20 @@ import guestGuard from '../middleware/guestGuard.js';
 import User from '../models/User.js';
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import authGuard from "../middleware/authGuard.js";
 
 const router = express.Router();
+
+router.get(paths.auth.signOut, authGuard, (req, res) => {
+  res.clearCookie('accessToken', {
+    domain: config.COOKIES_DOMAIN,
+    httpOnly: config.COOKIES_HTTPONLY,
+    secure: config.COOKIES_SECURE,
+    sameSite: config.COOKIES_SAMESITE,
+    maxAge: config.COOKIES_MAXAGE
+  });
+  res.redirect(paths.auth.signIn);
+});
 
 router.get(paths.auth.signIn, guestGuard, (req, res) => {
   res.render('auth/sign-in', {
