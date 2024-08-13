@@ -3,6 +3,7 @@ import paths from './paths.js';
 import authGuard from "../middleware/authGuard.js";
 import * as utils from "../utils.js";
 import Monitor from "../models/Monitor.js";
+import monitoring from "../monitoring.js";
 
 const router = express.Router();
 
@@ -73,13 +74,15 @@ router.post(paths.app.monitors.create, authGuard, async (req, res) => {
   try {
     validateMonitorInput(type, name, address, interval);
 
-    await Monitor.query().insert({
+    const monitor = await Monitor.query().insert({
       type,
       name,
       address,
       interval: parseInt(interval),
       userId: req.user.id
     });
+
+    await monitoring.addMonitor(req.app, monitor);
 
     res.redirect(`${paths.app.monitors.list}?saved`);
   } catch (error) {
@@ -130,6 +133,14 @@ router.post(paths.app.monitors.edit, authGuard, async (req, res) => {
         interval: parseInt(interval)
       });
 
+    await monitoring.removeMonitor(req.app, monitor);
+    await monitoring.addMonitor(req.app, {
+      type,
+      name,
+      address,
+      interval: parseInt(interval)
+    });
+
     res.redirect(`${paths.app.monitors.edit.replace(':id', req.params.id)}?saved`);
   } catch (error) {
     console.error(error);
@@ -153,6 +164,8 @@ router.get(paths.app.monitors.delete, authGuard, async (req, res) => {
     }
 
     await monitor.$query().delete();
+
+    await monitoring.removeMonitor(req.app, monitor);
 
     res.redirect(paths.app.monitors.list);
   } catch (error) {

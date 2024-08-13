@@ -9,10 +9,13 @@ import authGuard from "./middleware/authGuard.js";
 import cookieParser from "cookie-parser";
 import authRoutes from './routes/auth.js';
 import monitorsRoutes from './routes/monitors.js';
+import monitoring from "./monitoring.js";
 
 const app = express();
 
 app.use(cookieParser());
+
+app.locals.monitoringIntervals = {};
 
 app.locals.paths = paths;
 
@@ -50,6 +53,8 @@ app.get(paths.app.index, authGuard, (req, res) => {
 
 app.use(authRoutes);
 app.use(monitorsRoutes);
+
+await monitoring.init(app);
 
 app.listen(config.APP_PORT, () => {
   console.log(`App is ready on port ${config.APP_PORT}.`);
