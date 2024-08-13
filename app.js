@@ -27,8 +27,10 @@ app.engine('handlebars', engine({
       return a !== b;
     },
     eq: function (a, b) {
-      console.error(a, b)
       return a === b;
+    },
+    replaceIdInPath: function (path, id) {
+      return path.replace(':id', id);
     }
   }
 }));

@@ -1,0 +1,139 @@
+<h3>Edit Monitor</h3>
+
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">Pinger</li>
+        <li class="breadcrumb-item"><a href="{{paths.app.monitors.list}}">Monitors</a></li>
+        <li class="breadcrumb-item">{{monitor.name}}</li>
+        <li class="breadcrumb-item active" aria-current="page">Edit</li>
+    </ol>
+</nav>
+
+<div id="invalid-input-alert" class="alert alert-danger d-none" role="alert">
+    Invalid input. Please check your data and try again.
+</div>
+
+<div id="app-error-alert" class="alert alert-danger d-none" role="alert">
+    Ooops, something went wrong. Internal server error occurred.
+</div>
+
+
+<div id="saved-alert" class="alert alert-success d-none" role="alert">
+    Saved.
+</div>
+
+<form method="post" id="create-monitor-form">
+    <div class="mb-3">
+        <label for="type" class="form-label">Type</label>
+        <select class="form-select" id="type" name="type" required>
+            <option value="">Select type</option>
+            <option value="http" {{#if (eq monitor.type 'http')}}selected{{/if}}>HTTP(S)</option>
+            <option value="ping" {{#if (eq monitor.type 'ping')}}selected{{/if}}>Ping</option>
+            <option value="port" {{#if (eq monitor.type 'port')}}selected{{/if}}>Port</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{monitor.name}}" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="address" class="form-label">Address</label>
+        <input type="text" class="form-control" id="address" name="address" value="{{monitor.address}}" required>
+        <div id="address-helper" class="form-text">
+            Please enter a valid address according to the selected type.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="interval" class="form-label">Interval (minutes)</label>
+        <select class="form-select" id="interval" name="interval" required>
+            <option value="">Choose interval</option>
+            <option value="1" {{#if (eq monitor.type 'http')}}selected{{/if}}>1 min</option>
+            <option value="2" {{#if (eq monitor.type 'ping')}}selected{{/if}}>2 min</option>
+            <option value="3" {{#if (eq monitor.type 'port')}}selected{{/if}}>3 min</option>
+            <option value="4" {{#if (eq monitor.type 'port')}}selected{{/if}}>4 min</option>
+            <option value="5" {{#if (eq monitor.type 'port')}}selected{{/if}}>5 min</option>
+            <option value="6" {{#if (eq monitor.type 'port')}}selected{{/if}}>10 min</option>
+            <option value="7" {{#if (eq monitor.type 'port')}}selected{{/if}}>15 min</option>
+            <option value="8" {{#if (eq monitor.type 'port')}}selected{{/if}}>30 min</option>
+        </select>
+    </div>
+
+    <div class="mb-3 d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-floppy-o me-1"></i> Save</button>
+    </div>
+</form>
+<script>
+    document.getElementById('create-monitor-form').addEventListener('submit', function (e) {
+        const type = document.getElementById('type').value;
+        const addressField = document.getElementById('address');
+        const address = addressField.value;
+        const addressHelper = document.getElementById('address-helper');
+
+        addressHelper.classList.remove("invalid-feedback");
+        addressField.classList.remove("is-invalid");
+
+        const httpRegex = /^https?:\/\/[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}(\/.*)?$/;
+        const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        const ipPortRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):\d{1,5}$/;
+
+        let isValid = true;
+        if (type === 'http' && !httpRegex.test(address)) {
+            isValid = false;
+            addressHelper.textContent = 'Please enter a valid URL (e.g. http(s)://domain.tld).';
+        } else if (type === 'ping' && !ipRegex.test(address)) {
+            isValid = false;
+            addressHelper.classList.add("invalid-feedback");
+            addressHelper.textContent = 'Please enter a valid IP address.';
+        } else if (type === 'port' && !ipPortRegex.test(address)) {
+            isValid = false;
+            addressHelper.classList.add("invalid-feedback");
+            addressHelper.textContent = 'Please enter a valid IP address with a port (e.g. 192.168.0.1:8080).';
+        }
+
+        if (!isValid) {
+            addressField.classList.add("is-invalid");
+            addressHelper.classList.add("invalid-feedback");
+            e.preventDefault();
+        }
+    });
+</script>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+
+    if (urlParams.has('saved')) {
+        const alert = document.getElementById('saved-alert');
+
+        if (alert) {
+            alert.classList.remove('d-none');
+        }
+
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+    }
+
+    if (urlParams.has('invalid-input')) {
+        const errorAlert = document.getElementById('invalid-input-alert');
+
+        if (errorAlert) {
+            errorAlert.classList.remove('d-none');
+        }
+
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+    }
+
+    if (urlParams.has('app-error')) {
+        const errorAlert = document.getElementById('app-error-alert');
+
+        if (errorAlert) {
+            errorAlert.classList.remove('d-none');
+        }
+
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+    }
+</script>

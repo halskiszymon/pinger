@@ -8,7 +8,9 @@ export default {
     monitors: {
       index: '/monitors',
       list: '/monitors',
-      create: '/monitors/create'
+      create: '/monitors/create',
+      edit: '/monitors/:id/edit',
+      delete: '/monitors/:id/delete',
     }
   }
 }

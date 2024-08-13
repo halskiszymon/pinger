@@ -6,12 +6,34 @@ import Monitor from "../models/Monitor.js";
 
 const router = express.Router();
 
+const validateMonitorInput = (type, name, address, interval) => {
+  if (!name || !interval || !type || !address) {
+    throw new Error('400 - All fields are required.');
+  }
+
+  const httpRegex = /^https?:\/\/[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}(\/.*)?$/;
+  const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  const ipPortRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):\d{1,5}$/;
+
+  // todo: check name length
+  if (isNaN(interval)) {
+    throw new Error('400 - Invalid interval provided.');
+  }
+  if (type === 'http' && !httpRegex.test(address)) {
+    throw new Error('400 - Please enter a valid URL.');
+  } else if (type === 'ping' && !ipRegex.test(address)) {
+    throw new Error('400 - Please enter a valid IP address.');
+  } else if (type === 'port' && !ipPortRegex.test(address)) {
+    throw new Error('400 - Please enter a valid IP address with a port.');
+  }
+}
+
 router.get(paths.app.monitors.list, authGuard, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
 
-    const result = await Monitor.query().where('userId', req.user.id).page(page - 1, limit);
+    const result = await Monitor.query().where('userId', req.user.id).orderBy('id', 'desc').page(page - 1, limit);
 
     const totalPages = Math.ceil(result.results.length / limit);
 
@@ -35,6 +57,112 @@ router.get(paths.app.monitors.list, authGuard, async (req, res) => {
     });
   } catch (error) {
     utils.sendError(res, 500, error);
+  }
+});
+
+router.get(paths.app.monitors.create, authGuard, async (req, res) => {
+  res.render('app/create-monitor', {
+    layout: 'main',
+    title: 'Create new Monitor'
+  });
+});
+
+router.post(paths.app.monitors.create, authGuard, async (req, res) => {
+  const {type, name, address, interval} = req.body;
+
+  try {
+    validateMonitorInput(type, name, address, interval);
+
+    await Monitor.query().insert({
+      type,
+      name,
+      address,
+      interval: parseInt(interval),
+      userId: req.user.id
+    });
+
+    res.redirect(`${paths.app.monitors.list}?saved`);
+  } catch (error) {
+    console.error(error);
+
+    // todo: add previous fields values
+
+    if (error.message.startsWith('400 - ')) {
+      res.redirect(`${paths.app.monitors.create}?invalid-input`);
+    } else {
+      res.redirect(`${paths.app.monitors.create}?app-error`);
+    }
+  }
+});
+
+router.get(paths.app.monitors.edit, authGuard, async (req, res) => {
+  try {
+    const monitor = await Monitor.query().findById(req.params.id);
+
+    if (!monitor) {
+      return utils.sendError(res, 400, 'Monitor not found.');
+    }
+
+    res.render('app/edit-monitor', {monitor});
+  } catch (error) {
+    utils.sendError(res, 500, error);
+  }
+});
+
+router.post(paths.app.monitors.edit, authGuard, async (req, res) => {
+  const {type, name, address, interval} = req.body;
+
+  try {
+    validateMonitorInput(type, name, address, interval);
+
+    const monitor = await Monitor.query().findById(req.params.id);
+
+    if (!monitor) {
+      throw new Error('404 - Monitor not found.');
+    }
+
+    await monitor
+      .$query()
+      .patch({
+        type,
+        name,
+        address,
+        interval: parseInt(interval)
+      });
+
+    res.redirect(`${paths.app.monitors.edit.replace(':id', req.params.id)}?saved`);
+  } catch (error) {
+    console.error(error);
+
+    if (error.message.startsWith('400 - ')) {
+      res.redirect(`${paths.app.monitors.edit.replace(':id', req.params.id)}?invalid-input`);
+    } else {
+      res.redirect(`${paths.app.monitors.edit.replace(':id', req.params.id)}?app-error`);
+    }
+  }
+});
+
+router.get(paths.app.monitors.delete, authGuard, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const monitor = await Monitor.query().findById(id);
+
+    if (!monitor) {
+      throw new Error('404 - Monitor not found.');
+    }
+
+    await monitor.$query().delete();
+
+    res.redirect(paths.app.monitors.list);
+  } catch (error) {
+    console.error(error);
+
+    if (error.message.startsWith('400 - ')) {
+      res.redirect(`${paths.app.monitors.list}?invalid-input`);
+    } else {
+      res.redirect(`${paths.app.monitors.list}?app-error`);
+    }
   }
 });
 
