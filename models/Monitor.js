@@ -14,6 +14,7 @@ class Monitor extends Model {
       'name',
       'address',
       'interval',
+      'notifyEmailAddresses',
       'userId',
 
       'createdAt',
@@ -24,12 +25,13 @@ class Monitor extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['type', 'name', 'address', 'interval', 'userId'],
+      required: ['type', 'name', 'address', 'interval', 'notifyEmailAddresses', 'userId'],
       properties: {
         type: {type: 'string'}, // http or ping
         name: {type: 'string'},
         address: {type: 'string'},
         interval: {type: 'integer'},
+        notifyEmailAddresses: {type: 'string'},
         userId: {type: 'integer'},
       }
     };

@@ -55,6 +55,14 @@
         </select>
     </div>
 
+    <div class="mb-3">
+        <label for="notifyEmailAddresses" class="form-label">Notify email addresses</label>
+        <input type="text" class="form-control" id="notifyEmailAddresses" name="notifyEmailAddresses" required>
+        <div id="notify-email-addresses-helper" class="form-text">
+            Please enter an email address(es), which will be notified about monitor status change (separated by comma).
+        </div>
+    </div>
+
     <div class="mb-3 d-flex justify-content-center">
         <button type="submit" class="btn btn-primary"><i class="fa fa-floppy-o me-1"></i> Save</button>
     </div>
@@ -66,30 +74,58 @@
         const address = addressField.value;
         const addressHelper = document.getElementById('address-helper');
 
+        const emailField = document.getElementById('notifyEmailAddresses');
+        const emailValue = emailField.value;
+        const emailHelper = document.getElementById('notify-email-addresses-helper');
+
         addressHelper.classList.remove("invalid-feedback");
         addressField.classList.remove("is-invalid");
+        emailHelper.classList.remove("invalid-feedback");
+        emailField.classList.remove("is-invalid");
+
 
         const httpRegex = /^https?:\/\/[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}(\/.*)?$/;
         const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         const ipPortRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):\d{1,5}$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        let isValid = true;
+        let isTypeValid = true;
         if (type === 'http' && !httpRegex.test(address)) {
-            isValid = false;
+            isTypeValid = false;
             addressHelper.textContent = 'Please enter a valid URL (e.g. http(s)://domain.tld).';
         } else if (type === 'ping' && !ipRegex.test(address)) {
-            isValid = false;
+            isTypeValid = false;
             addressHelper.classList.add("invalid-feedback");
             addressHelper.textContent = 'Please enter a valid IP address.';
         } else if (type === 'port' && !ipPortRegex.test(address)) {
-            isValid = false;
+            isTypeValid = false;
             addressHelper.classList.add("invalid-feedback");
             addressHelper.textContent = 'Please enter a valid IP address with a port (e.g. 192.168.0.1:8080).';
         }
 
-        if (!isValid) {
+        if (!isTypeValid) {
             addressField.classList.add("is-invalid");
             addressHelper.classList.add("invalid-feedback");
+            e.preventDefault();
+        }
+
+        let isEmailValid = true;
+        if (emailValue.trim() === '') {
+            isEmailValid = false;
+        } else {
+            const emails = emailValue.split(',').map(email => email.trim());
+            for (let email of emails) {
+                if (!emailRegex.test(email)) {
+                    isEmailValid = false;
+                    break;
+                }
+            }
+        }
+
+        if (!isEmailValid) {
+            emailHelper.textContent = 'Please enter valid email address(es) separated by commas.';
+            emailField.classList.add("is-invalid");
+            emailHelper.classList.add("invalid-feedback");
             e.preventDefault();
         }
     });

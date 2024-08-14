@@ -7,7 +7,7 @@ import monitoring from "../monitoring.js";
 
 const router = express.Router();
 
-const validateMonitorInput = (type, name, address, interval) => {
+const validateMonitorInput = (type, name, address, interval, notifyEmailAddresses) => {
   if (!name || !interval || !type || !address) {
     throw new Error('400 - All fields are required.');
   }
@@ -15,6 +15,7 @@ const validateMonitorInput = (type, name, address, interval) => {
   const httpRegex = /^https?:\/\/[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}(\/.*)?$/;
   const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
   const ipPortRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):\d{1,5}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   // todo: check name length
   if (isNaN(interval)) {
@@ -26,6 +27,17 @@ const validateMonitorInput = (type, name, address, interval) => {
     throw new Error('400 - Please enter a valid IP address.');
   } else if (type === 'port' && !ipPortRegex.test(address)) {
     throw new Error('400 - Please enter a valid IP address with a port.');
+  }
+
+  if (notifyEmailAddresses.trim() === '') {
+    throw new Error('400 - Please enter valid email address(es) separated by commas.');
+  } else {
+    const emails = notifyEmailAddresses.split(',').map(email => email.trim());
+    for (let email of emails) {
+      if (!emailRegex.test(email)) {
+        throw new Error('400 - Please enter valid email address(es) separated by commas.');
+      }
+    }
   }
 }
 
@@ -69,16 +81,17 @@ router.get(paths.app.monitors.create, authGuard, async (req, res) => {
 });
 
 router.post(paths.app.monitors.create, authGuard, async (req, res) => {
-  const {type, name, address, interval} = req.body;
+  const {type, name, address, interval, notifyEmailAddresses} = req.body;
 
   try {
-    validateMonitorInput(type, name, address, interval);
+    validateMonitorInput(type, name, address, interval, notifyEmailAddresses);
 
     const monitor = await Monitor.query().insert({
       type,
       name,
       address,
       interval: parseInt(interval),
+      notifyEmailAddresses,
       userId: req.user.id
     });
 
@@ -113,10 +126,10 @@ router.get(paths.app.monitors.edit, authGuard, async (req, res) => {
 });
 
 router.post(paths.app.monitors.edit, authGuard, async (req, res) => {
-  const {type, name, address, interval} = req.body;
+  const {type, name, address, interval, notifyEmailAddresses} = req.body;
 
   try {
-    validateMonitorInput(type, name, address, interval);
+    validateMonitorInput(type, name, address, interval, notifyEmailAddresses);
 
     const monitor = await Monitor.query().findById(req.params.id);
 
@@ -130,10 +143,10 @@ router.post(paths.app.monitors.edit, authGuard, async (req, res) => {
         type,
         name,
         address,
-        interval: parseInt(interval)
+        interval: parseInt(interval),
+        notifyEmailAddresses
       });
 
-    await monitoring.removeMonitor(req.app, monitor);
     await monitoring.addMonitor(req.app, {
       type,
       name,
