@@ -50,14 +50,14 @@
         <label for="interval" class="form-label">Interval (minutes)</label>
         <select class="form-select" id="interval" name="interval" required>
             <option value="">Choose interval</option>
-            <option value="1" {{#if (eq monitor.type 'http')}}selected{{/if}}>1 min</option>
-            <option value="2" {{#if (eq monitor.type 'ping')}}selected{{/if}}>2 min</option>
-            <option value="3" {{#if (eq monitor.type 'port')}}selected{{/if}}>3 min</option>
-            <option value="4" {{#if (eq monitor.type 'port')}}selected{{/if}}>4 min</option>
-            <option value="5" {{#if (eq monitor.type 'port')}}selected{{/if}}>5 min</option>
-            <option value="10" {{#if (eq monitor.type 'port')}}selected{{/if}}>10 min</option>
-            <option value="15" {{#if (eq monitor.type 'port')}}selected{{/if}}>15 min</option>
-            <option value="30" {{#if (eq monitor.type 'port')}}selected{{/if}}>30 min</option>
+            <option value="1" {{#if (eq monitor.interval 1)}}selected{{/if}}>1 min</option>
+            <option value="2" {{#if (eq monitor.interval 2)}}selected{{/if}}>2 min</option>
+            <option value="3" {{#if (eq monitor.interval 3)}}selected{{/if}}>3 min</option>
+            <option value="4" {{#if (eq monitor.interval 4)}}selected{{/if}}>4 min</option>
+            <option value="5" {{#if (eq monitor.interval 5)}}selected{{/if}}>5 min</option>
+            <option value="10" {{#if (eq monitor.interval 10)}}selected{{/if}}>10 min</option>
+            <option value="15" {{#if (eq monitor.interval 15)}}selected{{/if}}>15 min</option>
+            <option value="30" {{#if (eq monitor.interval 30)}}selected{{/if}}>30 min</option>
         </select>
     </div>
 

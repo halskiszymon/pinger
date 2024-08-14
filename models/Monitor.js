@@ -1,5 +1,6 @@
 import {Model} from 'objection';
 import User from "./User.js";
+import MonitorLog from "./MonitorLog.js";
 
 class Monitor extends Model {
   static get tableName() {
@@ -14,6 +15,7 @@ class Monitor extends Model {
       'name',
       'address',
       'interval',
+      'status',
       'notifyEmailAddresses',
       'userId',
 
@@ -46,8 +48,31 @@ class Monitor extends Model {
           from: 'monitors.userId',
           to: 'users.id'
         }
+      },
+      logs: {
+        relation: Model.HasManyRelation,
+        modelClass: MonitorLog,
+        join: {
+          from: 'monitors.id',
+          to: 'monitorLogs.monitorId'
+        }
       }
     };
+  }
+
+  get status() {
+    return this.$lastLog ? this.$lastLog.status : null;
+  }
+
+  async $afterFind(queryContext) {
+    await super.$afterFind(queryContext);
+
+    const lastLog = await MonitorLog.query()
+      .where({monitorId: this.id})
+      .orderBy('id', 'desc')
+      .first();
+
+    this.$lastLog = lastLog;
   }
 }
 

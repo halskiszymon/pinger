@@ -41,7 +41,17 @@
             <td>{{this.type}}</td>
             <td>{{this.name}}</td>
             <td>{{this.address}}</td>
-            <td>{{this.status}}</td>
+            <td>
+                {{#if (eq this.status null)}}
+                    <span class="badge bg-warning"><i class="fa fa-clock-o me-1"></i> Awaiting</span>
+                {{else if (eq this.status false)}}
+                    <span class="badge bg-danger"><i class="fa fa-times-circle-o me-1"></i>Offline</span>
+                {{else if (eq this.status true)}}
+                    <span class="badge bg-success"><i class="fa fa-check-circle-o me-1"></i> Online</span>
+                {{else}}
+                    <span class="badge bg-secondary"><i class="fa fa-question-circle-o me-1"></i>Unknown</span>
+                {{/if}}
+            </td>
             <td>{{this.interval}} min</td>
             <td style="text-align: right">
                 <a href="{{replaceIdInPath ../paths.app.monitors.edit this.id}}" class="btn btn-sm btn-secondary"><i

@@ -28,4 +28,11 @@ export default {
   COOKIES_SECURE: process.env.COOKIES_SECURE ? parseFloat(process.env.COOKIES_SECURE) : true,
   COOKIES_SAMESITE: process.env.COOKIES_SAMESITE,
   COOKIES_MAXAGE: process.env.COOKIES_MAXAGE ? parseInt(process.env.COOKIES_MAXAGE) * 60 * 1000 : null,
+
+  MAIL_HOST: process.env.MAIL_HOST,
+  MAIL_PORT: process.env.MAIL_PORT,
+  MAIL_USER: process.env.MAIL_USER,
+  MAIL_PASS: process.env.MAIL_PASS,
+  MAIL_SECURE: process.env.MAIL_SECURE,
+  MAIL_REJECT_UNAUTHORIZED: process.env.MAIL_REJECT_UNAUTHORIZED,
 };

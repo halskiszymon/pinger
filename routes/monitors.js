@@ -1,7 +1,7 @@
 import express from 'express';
 import paths from './paths.js';
 import authGuard from "../middleware/authGuard.js";
-import * as utils from "../utils.js";
+import utils from "../utils.js";
 import Monitor from "../models/Monitor.js";
 import monitoring from "../monitoring.js";
 
@@ -137,9 +137,9 @@ router.post(paths.app.monitors.edit, authGuard, async (req, res) => {
       throw new Error('404 - Monitor not found.');
     }
 
-    await monitor
+    const updatedMonitor = await monitor
       .$query()
-      .patch({
+      .patchAndFetch({
         type,
         name,
         address,
@@ -147,12 +147,7 @@ router.post(paths.app.monitors.edit, authGuard, async (req, res) => {
         notifyEmailAddresses
       });
 
-    await monitoring.addMonitor(req.app, {
-      type,
-      name,
-      address,
-      interval: parseInt(interval)
-    });
+    await monitoring.addMonitor(req.app, updatedMonitor);
 
     res.redirect(`${paths.app.monitors.edit.replace(':id', req.params.id)}?saved`);
   } catch (error) {
